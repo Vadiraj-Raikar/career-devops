@@ -1,66 +1,64 @@
 pipeline { 
-    parameters{ 
-        choice(name: 'terraformAction',choices: ['apply','destroy'],description: 'choose your terraform action to perform') 
+    parameters { 
+        choice(name: 'terraformAction', choices: ['apply', 'destroy'], description: 'Choose your Terraform action to perform') 
     } 
-    environment{ 
-        AWS_ACCESS_KEY_ID = credentials{'AWS_ACCESS_KEY_ID'} 
-        AWS_SECRET_ACCESS_KEY = credentials{'AWS_SECRET_ACCESS_KEY'} 
+    environment { 
+        AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID') 
+        AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY') 
     } 
- 
+
     agent any 
- 
-        stages{
-            stage('git checkout'){
-            steps{
+
+    stages {
+        stage('Git Checkout') {
+            steps {
                 git branch: 'iac', url: 'https://github.com/Vadiraj-Raikar/career-devops.git'
             } 
         } 
-            stage('plan'){ 
-             step{ 
+
+        stage('Plan') { 
+            steps { 
                 sh ''' 
                     cd terraform 
                     pwd 
                     terraform init 
-                    terraform plan -out tfplan 
-                    terraform show -no-colour tfplan > tfplan.txt  
+                    terraform plan -out=tfplan 
+                    terraform show -no-color tfplan > tfplan.txt  
                 '''
-        }
-             
-            } 
+            }
         } 
- 
-            stage('aproval'){ 
-                steps{ 
-                    script{ 
-                        def plan = readFile 'terraform/tfplan.txt' 
-                        input message: "do you want to procude with terraform action..?" 
-                        parameters: [text{name: 'Plan',description: 'please review the code/plan once',defaultValue: plan}] 
-                } 
-            } 
- 
-        } 
- 
-            stage('creation/destroy stage'){ 
-                when { 
-                    expression { 
-                        return params.terraformAction == 'apply' || params.terraformAction == 'destroy' 
-                    } 
-            } 
- 
-                steps{ 
-                    script{ 
-                        if (params.terraformAction == 'apply') { 
-                            sh "pwd; cd /terraform ; terraform apply -input=false tfplan"     
-                        } else if (params.terraformAction == 'destroy'){ 
-                            sh "pwd; cd /terraform ; terraform destroy -auto-approve" 
-                    } 
+
+        stage('Approval') { 
+            steps { 
+                script { 
+                    def plan = readFile 'terraform/tfplan.txt' 
+                    input message: "Do you want to proceed with the Terraform action?", 
+                          parameters: [text(name: 'Plan', description: 'Please review the code/plan once', defaultValue: plan)] 
                 } 
             } 
         } 
-     
+
+        stage('Creation/Destroy Stage') { 
+            when { 
+                expression { 
+                    return params.terraformAction == 'apply' || params.terraformAction == 'destroy' 
+                } 
+            } 
+            steps { 
+                script { 
+                    if (params.terraformAction == 'apply') { 
+                        sh ''' 
+                            cd terraform 
+                            terraform apply -input=false tfplan
+                        '''     
+                    } else if (params.terraformAction == 'destroy') { 
+                        sh ''' 
+                            cd terraform 
+                            terraform destroy -auto-approve
+                        ''' 
+                    } 
+                } 
+            } 
+        } 
     } 
- 
- 
- 
-    ` 
 }
