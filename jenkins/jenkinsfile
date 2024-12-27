@@ -12,7 +12,7 @@ pipeline {
     stages {
         stage('Git Checkout') {
             steps {
-                git branch: 'iac', url: 'https://github.com/Vadiraj-Raikar/career-devops.git'
+                git branch: 'Iac', url: 'https://github.com/Vadiraj-Raikar/career-devops.git'
             } 
         } 
 
