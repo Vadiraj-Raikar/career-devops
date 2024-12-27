@@ -20,6 +20,7 @@ pipeline {
             steps { 
                 sh  ''' 
                     cd terraform 
+                    pwd
                     terraform init 
                     terraform plan -out=tfplan 
                     terraform show -no-color tfplan > tfplan.txt  
@@ -40,7 +41,7 @@ pipeline {
         stage('Creation/Destroy Stage') { 
             when { 
                 expression { 
-                    params.terraformAction == 'apply' || params.terraformAction == 'destroy' 
+                   return params.terraformAction == 'apply' || params.terraformAction == 'destroy' 
                 } 
             } 
             steps { 
